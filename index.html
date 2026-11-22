@@ -1,10 +1,184 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>ApnaAI</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#704cff">
+<title>ApnaAI - AI Tools for Everyone</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f8f7ff;color:#25213a;
+font-family:Arial,sans-serif}
+header{height:75px;background:white;display:flex;
+align-items:center;justify-content:space-between;
+padding:0 7%;border-bottom:1px solid #eee}
+.logo{font-size:26px;font-weight:900;color:#704cff}
+nav{display:flex;align-items:center;gap:15px}
+button,select{cursor:pointer;border:0;border-radius:11px;padding:12px}
+select{background:#f1edff}
+.primary{background:#704cff;color:white;font-weight:bold}
+.hero{text-align:center;padding:75px 15px 65px;
+background:linear-gradient(135deg,#eee9ff,#faf9ff)}
+.tag{color:#704cff;font-weight:bold}
+h1{font-size:clamp(36px,6vw,58px);margin:18px 0}
+.hero p{color:#777188;font-size:17px}
+.search{width:min(560px,95%);padding:17px;
+border:1px solid #ded8f4;border-radius:14px;
+margin:20px 0;font-size:16px}
+.section{max-width:1050px;margin:45px auto;padding:0 20px}
+.section h2{font-size:27px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:17px}
+.card{background:white;padding:22px;border:1px solid #ece9f4;
+border-radius:17px;cursor:pointer;transition:.2s}
+.card:hover{transform:translateY(-4px);border-color:#704cff}
+.emoji{font-size:32px}
+.card h3{margin-bottom:8px}
+.muted{color:#817b90;font-size:14px;line-height:1.5}
+#workspace{display:none;background:white;border:1px solid #eee;
+border-radius:18px;padding:24px;margin-top:30px}
+textarea{width:100%;min-height:130px;padding:15px;
+border:1px solid #ddd;border-radius:12px;font:inherit}
+#result{white-space:pre-wrap;background:#f7f5ff;
+padding:15px;border-radius:12px;display:none;margin-top:15px}
+footer{text-align:center;padding:40px;background:white;color:#817b90}
+@media(max-width:600px){
+header{padding:0 15px}
+.logo{font-size:22px}
+nav{gap:6px}
+.hero{padding:55px 12px}
+.section{margin:25px auto}
+}
+</style>
 </head>
 <body>
-  <h1>Welcome to ApnaAI!</h1>
-  <p>Your AI. Your Language. Your Future.</p>
+
+<header>
+ <div class="logo">✦ ApnaAI</div>
+ <nav>
+  <select id="language" onchange="changeLanguage()">
+   <option value="en">English</option>
+   <option value="ur">اردو</option>
+   <option value="roman">Roman Urdu</option>
+  </select>
+  <button class="primary" onclick="signIn()">Login</button>
+ </nav>
+</header>
+
+<section class="hero">
+ <div class="tag">✦ YOUR SMART AI PLATFORM</div>
+ <h1 id="headline">Your AI. Your Language.</h1>
+ <p id="description">Create, write and work smarter with ApnaAI.</p>
+ <input class="search" id="search"
+ placeholder="Search your favourite AI tool..."
+ oninput="searchTools()">
+ <br>
+ <button class="primary" onclick="document.getElementById('tools').scrollIntoView({behavior:'smooth'})">
+  Explore AI Tools ↓
+ </button>
+</section>
+
+<section class="section" id="tools">
+ <h2 id="toolsTitle">Explore AI Tools</h2>
+ <p class="muted" id="toolsDescription">Everything you need in one place.</p>
+ <div class="grid" id="toolGrid"></div>
+
+ <div id="workspace">
+  <h2 id="toolTitle">AI Tool</h2>
+  <p class="muted" id="toolHelp">Enter your instructions below.</p>
+  <textarea id="prompt" placeholder="Write your idea here..."></textarea>
+  <br><br>
+  <button class="primary" onclick="generate()">Generate with AI</button>
+  <div id="result"></div>
+ </div>
+</section>
+
+<footer>
+ <div class="logo">✦ ApnaAI</div>
+ <p>AI for everyone, everywhere.</p>
+ <p>English • اردو • Roman Urdu</p>
+ <small>© 2026 ApnaAI. All rights reserved.</small>
+</footer>
+
+<script>
+const tools=[
+ {icon:"✍️",name:"AI Text Writer",desc:"Create articles and content"},
+ {icon:"📱",name:"Caption Generator",desc:"Social media captions"},
+ {icon:"📄",name:"CV Maker",desc:"Build a professional CV"},
+ {icon:"✉️",name:"Email Writer",desc:"Write professional emails"},
+ {icon:"🛍️",name:"Product Description",desc:"Write product descriptions"},
+ {icon:"🌐",name:"Translator",desc:"Translate Urdu and English"},
+ {icon:"📚",name:"Study Assistant",desc:"Understand difficult topics"},
+ {icon:"✨",name:"Bio Generator",desc:"Create attractive profile bios"}
+];
+
+let selectedTool="";
+let language="en";
+
+function renderTools(list){
+ const grid=document.getElementById("toolGrid");
+ grid.innerHTML="";
+ list.forEach(tool=>{
+  const card=document.createElement("div");
+  card.className="card";
+  const emoji=document.createElement("div");
+  emoji.className="emoji";
+  emoji.textContent=tool.icon;
+  const title=document.createElement("h3");
+  title.textContent=tool.name;
+  const desc=document.createElement("p");
+  desc.className="muted";
+  desc.textContent=tool.desc;
+  card.append(emoji,title,desc);
+  card.onclick=()=>openTool(tool.name);
+  grid.append(card);
+ });
+}
+
+function searchTools(){
+ const q=document.getElementById("search").value.toLowerCase();
+ renderTools(tools.filter(t=>
+  (t.name+" "+t.desc).toLowerCase().includes(q)
+ ));
+}
+
+function openTool(name){
+ selectedTool=name;
+ document.getElementById("workspace").style.display="block";
+ document.getElementById("toolTitle").textContent=name;
+ document.getElementById("result").style.display="none";
+ document.getElementById("prompt").value="";
+ document.getElementById("workspace").scrollIntoView({behavior:"smooth"});
+}
+
+async function generate(){
+ const prompt=document.getElementById("prompt").value.trim();
+ if(!prompt){alert("Please enter your idea first.");return}
+ const result=document.getElementById("result");
+ result.style.display="block";
+ result.textContent="AI backend abhi connect nahi hua. Next development step mein real AI activate karenge.";
+}
+
+function signIn(){
+ alert("Google Login will be activated in the Firebase setup step.");
+}
+
+function changeLanguage(){
+ language=document.getElementById("language").value;
+ const content={
+ en:["Your AI. Your Language.","Create, write and work smarter with ApnaAI.","Explore AI Tools","Everything you need in one place."],
+ ur:["آپ کا AI، آپ کی زبان","ApnaAI کے ساتھ تخلیق کریں اور آسانی سے کام کریں۔","AI ٹولز","آپ کی تمام ضروریات ایک جگہ۔"],
+ roman:["Aapka AI. Aapki Zubaan.","ApnaAI ke saath likhein aur smart kaam karein.","AI Tools Explore Karein","Aapki tamam zarooriyat ek jagah."]
+ };
+ const c=content[language];
+ document.getElementById("headline").textContent=c[0];
+ document.getElementById("description").textContent=c[1];
+ document.getElementById("toolsTitle").textContent=c[2];
+ document.getElementById("toolsDescription").textContent=c[3];
+ document.documentElement.dir=language==="ur"?"rtl":"ltr";
+}
+
+renderTools(tools);
+</script>
 </body>
 </html>
