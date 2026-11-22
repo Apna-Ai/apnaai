@@ -151,12 +151,42 @@ function openTool(name){
  document.getElementById("workspace").scrollIntoView({behavior:"smooth"});
 }
 
-async function generate(){
- const prompt=document.getElementById("prompt").value.trim();
- if(!prompt){alert("Please enter your idea first.");return}
- const result=document.getElementById("result");
- result.style.display="block";
- result.textContent="AI backend abhi connect nahi hua. Next development step mein real AI activate karenge.";
+
+async function generate() {
+  const prompt = document.getElementById("prompt").value.trim();
+  const result = document.getElementById("result");
+
+  if (!prompt) {
+    alert("Please enter your idea first.");
+    return;
+  }
+
+  result.style.display = "block";
+  result.textContent = "ApnaAI is thinking... ✨";
+
+  try {
+    const response = await fetch("/api/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        tool: selectedTool
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "AI request failed.");
+    }
+
+    result.textContent = data.answer;
+
+  } catch (error) {
+    result.textContent = "Error: " + error.message;
+  }
 }
 
 function signIn(){
