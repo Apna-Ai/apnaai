@@ -78,12 +78,18 @@ User request: ${prompt}
 
     const data = await response.json();
 
-    if (!response.ok) {
-      return Response.json(
-        { error: "AI provider error. Please try again later." },
-        { status: 502, headers }
-      );
-    }
+   if (!response.ok) {
+  console.error("Gemini API error:", response.status, data);
+
+  return Response.json(
+    {
+      error: "Gemini API error",
+      details: data.error?.message || "Unknown provider error",
+      status: response.status
+    },
+    { status: 502, headers }
+  );
+}
 
     const answer =
       data.candidates?.[0]?.content?.parts
