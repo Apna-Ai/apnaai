@@ -183,8 +183,10 @@ function searchTools(){
  });
 }
 
+let isAuthenticated=false;
 function openTool(name){
  selectedTool=name;
+ if(!isAuthenticated){openLogin();document.getElementById("authMessage").textContent="AI response lene ke liye pehle Sign Up ya Login zaroori hai.";return;}
  document.getElementById("workspace").style.display="block";
  document.getElementById("toolTitle").textContent=name;
  document.getElementById("result").style.display="none";
@@ -262,9 +264,9 @@ function openSignup(){document.getElementById("signupModal").classList.add("open
 function openLogin(){document.getElementById("signupModal").classList.add("open");document.getElementById("authForm").hidden=false;document.getElementById("signedIn").hidden=true;showAuth("login");}
 function closeSignup(){document.getElementById("signupModal").classList.remove("open");}
 document.getElementById("signupModal").addEventListener("click",event=>{if(event.target.id==="signupModal")closeSignup();});
-document.getElementById("authForm").addEventListener("submit",async event=>{event.preventDefault();const message=document.getElementById("authMessage"),button=document.getElementById("authSubmit");button.disabled=true;message.textContent="Please wait...";const payload={email:document.getElementById("authEmail").value,password:document.getElementById("authPassword").value,name:document.getElementById("authName").value};try{const response=await fetch("/api/auth/"+authMode,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const data=await response.json();if(!response.ok)throw new Error(data.error||"Request failed");message.textContent=authMode==="register"?"Account created successfully!":"Login successful!";document.getElementById("authForm").hidden=true;document.getElementById("signedIn").hidden=false;document.getElementById("signedInText").textContent="Welcome, "+data.user.name+" ("+data.user.email+")";}catch(error){message.textContent=error.message;}finally{button.disabled=false;}});
-async function logout(){await fetch("/api/auth/logout",{method:"POST"});document.getElementById("authForm").hidden=false;document.getElementById("signedIn").hidden=true;closeSignup();}
-async function checkSession(){try{const r=await fetch("/api/auth/me");const d=await r.json();if(d.user){const b=document.querySelector("nav .nav-button");b.textContent="My Account";b.onclick=openLogin;}}catch{}}
+document.getElementById("authForm").addEventListener("submit",async event=>{event.preventDefault();const message=document.getElementById("authMessage"),button=document.getElementById("authSubmit");button.disabled=true;message.textContent="Please wait...";const payload={email:document.getElementById("authEmail").value,password:document.getElementById("authPassword").value,name:document.getElementById("authName").value};try{const response=await fetch("/api/auth/"+authMode,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const data=await response.json();if(!response.ok)throw new Error(data.error||"Request failed");message.textContent=authMode==="register"?"Account created successfully!":"Login successful!";isAuthenticated=true;document.getElementById("authForm").hidden=true;document.getElementById("signedIn").hidden=false;document.getElementById("signedInText").textContent="Welcome, "+data.user.name+" ("+data.user.email+")";setTimeout(()=>{closeSignup();if(selectedTool)openTool(selectedTool);},700);}catch(error){message.textContent=error.message;}finally{button.disabled=false;}});
+async function logout(){await fetch("/api/auth/logout",{method:"POST"});isAuthenticated=false;document.getElementById("authForm").hidden=false;document.getElementById("signedIn").hidden=true;closeSignup();}
+async function checkSession(){try{const r=await fetch("/api/auth/me");const d=await r.json();if(d.user){isAuthenticated=true;const b=document.querySelector("nav .nav-button");b.textContent="My Account";b.onclick=openLogin;}}catch{}}
 checkSession();
 
 renderTools(tools);
