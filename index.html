@@ -121,28 +121,15 @@ nav{gap:6px}
  </section>
 </section>
 
-<div class="modal" id="signupModal" role="dialog" aria-modal="true" aria-labelledby="signupTitle">
- <div class="modal-panel">
-  <button type="button" onclick="closeSignup()" style="float:right;background:#f1edff">Close ✕</button>
-  <h2 id="signupTitle">Create your ApnaAI registration</h2>
-  <p class="muted">Enter your contact details. We will email your registration request to the ApnaAI team.</p>
-  <form action="https://formsubmit.co/ranagrub6@gmail.com" method="POST">
-   <input type="hidden" name="_subject" value="New ApnaAI website registration">
-   <input type="hidden" name="_template" value="table">
-   <input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;height:1px;width:1px">
-   <input type="hidden" name="_next" value="https://apnaai-pages.pages.dev/?registration=submitted">
-   <label for="signupName">Full name</label>
-   <input id="signupName" name="Name" type="text" maxlength="80" autocomplete="name" required>
-   <label for="signupEmail">Email address</label>
-   <input id="signupEmail" name="Email" type="email" maxlength="150" autocomplete="email" required>
-   <label for="signupPhone">Phone (optional)</label>
-   <input id="signupPhone" name="Phone" type="tel" maxlength="30" autocomplete="tel">
-   <label style="display:flex;gap:9px;align-items:flex-start;margin:5px 0 16px;font-size:13px"><input type="checkbox" name="Consent" value="I agree to send these details to ApnaAI" required style="width:auto;margin:3px 0 0"> I agree that these details may be emailed to ApnaAI for registration contact.</label>
-   <p class="form-note">Do not enter a password or sensitive personal information. This is an email registration request, not an active login account.</p>
-   <div class="modal-actions"><button class="primary" type="submit">Send Registration</button><button type="button" onclick="closeSignup()">Cancel</button></div>
-  </form>
- </div>
-</div>
+<div class="modal" id="signupModal" role="dialog" aria-modal="true" aria-labelledby="signupTitle"><div class="modal-panel">
+<button type="button" onclick="closeSignup()" style="float:right;background:#f1edff">Close ✕</button><h2 id="signupTitle">ApnaAI Account</h2>
+<div class="modal-actions" style="margin:12px 0 18px"><button type="button" id="signupTab" class="primary" onclick="showAuth('register')">Sign Up</button><button type="button" id="loginTab" onclick="showAuth('login')">Login</button></div>
+<form id="authForm"><div id="nameField"><label for="authName">Full name</label><input id="authName" name="name" type="text" maxlength="80" autocomplete="name" minlength="2"></div>
+<label for="authEmail">Email address</label><input id="authEmail" name="email" type="email" maxlength="150" autocomplete="email" required>
+<label for="authPassword">Password (minimum 10 characters)</label><input id="authPassword" name="password" type="password" minlength="10" maxlength="128" autocomplete="new-password" required>
+<p class="form-note">Password is securely hashed before storage. Email verification and password reset are not enabled yet. Use an email you own.</p>
+<div class="modal-actions"><button class="primary" id="authSubmit" type="submit">Create Account</button></div><p id="authMessage" class="form-note" role="status"></p></form>
+<div id="signedIn" hidden><p id="signedInText"></p><button type="button" onclick="logout()">Logout</button></div></div></div>
 
 <footer>
  <div class="logo">✦ ApnaAI</div>
@@ -269,10 +256,16 @@ function changeLanguage(){
  document.documentElement.dir=language==="ur"?"rtl":"ltr";
 }
 
-function openSignup(){document.getElementById("signupModal").classList.add("open");}
+let authMode="register";
+function showAuth(mode){authMode=mode;document.getElementById("nameField").hidden=mode==="login";document.getElementById("authName").required=mode==="register";document.getElementById("authPassword").autocomplete=mode==="login"?"current-password":"new-password";document.getElementById("signupTitle").textContent=mode==="login"?"Login to ApnaAI":"Create your ApnaAI account";document.getElementById("authSubmit").textContent=mode==="login"?"Login":"Create Account";document.getElementById("signupTab").className=mode==="register"?"primary":"";document.getElementById("loginTab").className=mode==="login"?"primary":"";document.getElementById("authMessage").textContent="";}
+function openSignup(){document.getElementById("signupModal").classList.add("open");document.getElementById("authForm").hidden=false;document.getElementById("signedIn").hidden=true;showAuth("register");}
+function openLogin(){document.getElementById("signupModal").classList.add("open");document.getElementById("authForm").hidden=false;document.getElementById("signedIn").hidden=true;showAuth("login");}
 function closeSignup(){document.getElementById("signupModal").classList.remove("open");}
 document.getElementById("signupModal").addEventListener("click",event=>{if(event.target.id==="signupModal")closeSignup();});
-if(new URLSearchParams(location.search).get("registration")==="submitted"){alert("Registration request submitted. If this is the first submission, the site owner may need to activate email delivery.");}
+document.getElementById("authForm").addEventListener("submit",async event=>{event.preventDefault();const message=document.getElementById("authMessage"),button=document.getElementById("authSubmit");button.disabled=true;message.textContent="Please wait...";const payload={email:document.getElementById("authEmail").value,password:document.getElementById("authPassword").value,name:document.getElementById("authName").value};try{const response=await fetch("/api/auth/"+authMode,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const data=await response.json();if(!response.ok)throw new Error(data.error||"Request failed");message.textContent=authMode==="register"?"Account created successfully!":"Login successful!";document.getElementById("authForm").hidden=true;document.getElementById("signedIn").hidden=false;document.getElementById("signedInText").textContent="Welcome, "+data.user.name+" ("+data.user.email+")";}catch(error){message.textContent=error.message;}finally{button.disabled=false;}});
+async function logout(){await fetch("/api/auth/logout",{method:"POST"});document.getElementById("authForm").hidden=false;document.getElementById("signedIn").hidden=true;closeSignup();}
+async function checkSession(){try{const r=await fetch("/api/auth/me");const d=await r.json();if(d.user){const b=document.querySelector("nav .nav-button");b.textContent="My Account";b.onclick=openLogin;}}catch{}}
+checkSession();
 
 renderTools(tools);
 </script>
