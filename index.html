@@ -31,7 +31,7 @@ margin:20px 0;font-size:16px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:17px}
 .card{background:white;padding:22px;border:1px solid #ece9f4;
 border-radius:17px;cursor:pointer;transition:.2s}
-.card:hover{transform:translateY(-4px);border-color:#704cff}
+.card:hover{transform:translateY(-4px);border-color:#704cff}\n.card[hidden]{display:none}
 .emoji{font-size:32px}
 .card h3{margin-bottom:8px}
 .muted{color:#817b90;font-size:14px;line-height:1.5}
@@ -121,6 +121,7 @@ function renderTools(list){
  list.forEach(tool=>{
   const card=document.createElement("div");
   card.className="card";
+  card.dataset.search=(tool.name+" "+tool.desc).toLowerCase();
   const emoji=document.createElement("div");
   emoji.className="emoji";
   emoji.textContent=tool.icon;
@@ -136,10 +137,10 @@ function renderTools(list){
 }
 
 function searchTools(){
- const q=document.getElementById("search").value.toLowerCase();
- renderTools(tools.filter(t=>
-  (t.name+" "+t.desc).toLowerCase().includes(q)
- ));
+ const q=document.getElementById("search").value.trim().toLowerCase();
+ document.querySelectorAll("#toolGrid .card").forEach(card=>{
+  card.hidden=!card.dataset.search.includes(q);
+ });
 }
 
 function openTool(name){
