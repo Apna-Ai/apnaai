@@ -97,18 +97,38 @@ User request: ${prompt}
       );
     }
 
-   if (!response.ok) {
-  console.error("Gemini API error:", response.status, data);
+    if (!response.ok) {
+      console.error("Gemini API error:", response.status, data);
 
-  return Response.json(
-    {
-      error: "Gemini API error",
-      details: data.error?.message || "Unknown provider error",
-      status: response.status
-    },
-    { status: 502, headers }
-  );
-}
+      if (response.status === 429) {
+        const retryInfo = data.error?.details?.find(
+          item => item["@type"]?.includes("RetryInfo")
+        );
+        const retryDelay = retryInfo?.retryDelay;
+
+        return Response.json(
+          {
+            error: "ApnaAI ki aaj ki free AI request limit poori ho gayi hai. Google Gemini quota reset hone ke baad dobara try karein, ya administrator paid API billing enable kare."
+          },
+          {
+            status: 429,
+            headers: {
+              ...headers,
+              ...(retryDelay ? { "Retry-After": String(Math.ceil(parseFloat(retryDelay) || 0)) } : {})
+            }
+          }
+        );
+      }
+
+      return Response.json(
+        {
+          error: "Gemini API error",
+          details: data.error?.message || "Unknown provider error",
+          status: response.status
+        },
+        { status: 502, headers }
+      );
+    }
 
     const answer =
       data.candidates?.[0]?.content?.parts
