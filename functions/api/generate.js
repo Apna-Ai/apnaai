@@ -13,12 +13,21 @@ export async function onRequestPost({ request, env }) {
       );
     }
 
-    const body = await request.json();
-    const prompt = typeof body.prompt === "string"
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return Response.json(
+        { error: "Invalid request. Please send valid JSON." },
+        { status: 400, headers }
+      );
+    }
+
+    const prompt = typeof body?.prompt === "string"
       ? body.prompt.trim()
       : "";
-    const tool = typeof body.tool === "string"
-      ? body.tool
+    const tool = typeof body?.tool === "string" && body.tool.trim()
+      ? body.tool.trim()
       : "AI Assistant";
 
     if (!prompt || prompt.length > 3000) {
@@ -29,6 +38,7 @@ export async function onRequestPost({ request, env }) {
     }
 
     const allowedTools = [
+      "AI Assistant",
       "AI Text Writer",
       "Caption Generator",
       "CV Maker",
@@ -76,7 +86,16 @@ User request: ${prompt}
       }
     );
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      console.error("Gemini returned a non-JSON response:", response.status);
+      return Response.json(
+        { error: "AI provider returned an invalid response. Please try again." },
+        { status: 502, headers }
+      );
+    }
 
    if (!response.ok) {
   console.error("Gemini API error:", response.status, data);
@@ -98,6 +117,10 @@ User request: ${prompt}
         .trim();
 
     if (!answer) {
+      console.error("Gemini response contained no text:", {
+        finishReason: data.candidates?.[0]?.finishReason,
+        promptFeedback: data.promptFeedback
+      });
       return Response.json(
         { error: "No answer received. Please try again." },
         { status: 502, headers }
@@ -107,6 +130,7 @@ User request: ${prompt}
     return Response.json({ answer }, { headers });
 
   } catch (error) {
+    console.error("ApnaAI generate endpoint failed:", error);
     return Response.json(
       { error: "Something went wrong. Please try again." },
       { status: 500, headers }
