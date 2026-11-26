@@ -66,25 +66,42 @@ Be clear, helpful and accurate.
 User request: ${prompt}
 `;
 
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": env.GEMINI_API_KEY
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: instructions }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1000
-          }
-        })
-      }
-    );
+    const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent";
+    const requestOptions = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": env.GEMINI_API_KEY
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: instructions }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1000
+        }
+      })
+    };
+
+    // Retry temporary Gemini capacity/server errors. Do not retry exhausted daily quota.
+    let response;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      response = await fetch(apiUrl, requestOptions);
+
+      if (response.ok) break;
+
+      const retryData = await response.clone().json().catch(() => ({}));
+      const providerMessage = retryData.error?.message || "";
+      const isDailyQuota = response.status === 429 &&
+        /free.?tier|per.?day|requests per day|quota exceeded/i.test(providerMessage);
+      const isTemporary = [500, 502, 503, 504].includes(response.status) ||
+        (response.status === 429 && !isDailyQuota);
+
+      if (!isTemporary || attempt === 2) break;
+
+      await new Promise(resolve => setTimeout(resolve, 700 * (attempt + 1)));
+    }
 
     let data;
     try {
@@ -117,6 +134,16 @@ User request: ${prompt}
               ...(retryDelay ? { "Retry-After": String(Math.ceil(parseFloat(retryDelay) || 0)) } : {})
             }
           }
+        );
+      }
+
+      if ([500, 502, 503, 504].includes(response.status) ||
+          (response.status === 429 && !/free.?tier|per.?day|requests per day|quota exceeded/i.test(data.error?.message || ""))) {
+        return Response.json(
+          {
+            error: "Google Gemini is busy right now. ApnaAI ne dobara koshish ki, lekin service abhi available nahi. 1-2 minute baad phir try karein."
+          },
+          { status: 503, headers }
         );
       }
 
