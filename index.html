@@ -61,7 +61,7 @@ nav{gap:6px}
    <option value="ur">اردو</option>
    <option value="roman">Roman Urdu</option>
   </select>
-  <button class="primary" onclick="signIn()">Login</button>
+  <button class="primary" onclick="signIn()">Login (coming soon)</button>
  </nav>
 </header>
 
@@ -88,7 +88,7 @@ nav{gap:6px}
   <p class="muted" id="toolHelp">Enter your instructions below.</p>
   <textarea id="prompt" placeholder="Write your idea here..."></textarea>
   <br><br>
-  <button class="primary" onclick="generate()">Generate with AI</button>
+  <button class="primary" id="generateButton" onclick="generate()">Generate with AI</button>
   <div id="result"></div>
  </div>
 </section>
@@ -155,6 +155,7 @@ function openTool(name){
 async function generate() {
   const prompt = document.getElementById("prompt").value.trim();
   const result = document.getElementById("result");
+  const button = document.getElementById("generateButton");
 
   if (!prompt) {
     alert("Please enter your idea first.");
@@ -163,34 +164,43 @@ async function generate() {
 
   result.style.display = "block";
   result.textContent = "ApnaAI is thinking... ✨";
+  button.disabled = true;
+  button.textContent = "Generating...";
 
   try {
     const response = await fetch("/api/generate", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        prompt: prompt,
-        tool: selectedTool
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt, tool: selectedTool })
     });
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error("Server returned an invalid response. Please try again.");
+    }
 
     if (!response.ok) {
-      throw new Error(data.error || "AI request failed.");
+      const detail = data.details ? ": " + data.details : "";
+      throw new Error((data.error || "AI request failed") + detail);
+    }
+
+    if (!data.answer) {
+      throw new Error("AI returned an empty answer. Please try again.");
     }
 
     result.textContent = data.answer;
-
   } catch (error) {
     result.textContent = "Error: " + error.message;
+  } finally {
+    button.disabled = false;
+    button.textContent = "Generate with AI";
   }
 }
 
 function signIn(){
- alert("Google Login will be activated in the Firebase setup step.");
+ alert("Google Login is not connected yet. You can use ApnaAI tools without signing in.");
 }
 
 function changeLanguage(){
