@@ -5,6 +5,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#704cff">
+<meta name="description" content="Use ApnaAI to draft articles, captions, emails, CV content, translations and study notes in English, Urdu and Roman Urdu.">
+<link rel="canonical" href="https://apnaai-pages.pages.dev/">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ApnaAI — Practical AI Writing Tools">
+<meta property="og:description" content="Create and improve everyday writing with ApnaAI in English, Urdu and Roman Urdu.">
+<meta property="og:url" content="https://apnaai-pages.pages.dev/">
 <title>ApnaAI - AI Tools for Everyone</title>
 <style>
 *{box-sizing:border-box}
@@ -14,7 +21,7 @@ header{height:75px;background:white;display:flex;
 align-items:center;justify-content:space-between;
 padding:0 7%;border-bottom:1px solid #eee}
 .logo{font-size:26px;font-weight:900;color:#704cff}
-nav{display:flex;align-items:center;gap:15px}
+nav{display:flex;align-items:center;gap:15px;flex-wrap:wrap}\nnav a{color:#704cff;text-decoration:none;font-size:14px;font-weight:bold}\n.nav-note{color:#777188;font-size:13px}
 button,select{cursor:pointer;border:0;border-radius:11px;padding:12px}
 select{background:#f1edff}
 .primary{background:#704cff;color:white;font-weight:bold}
@@ -61,7 +68,7 @@ nav{gap:6px}
    <option value="ur">اردو</option>
    <option value="roman">Roman Urdu</option>
   </select>
-  <button class="primary" onclick="signIn()">Login (coming soon)</button>
+  <a href="/guides.html">Guides</a><a href="/about.html">About</a><a href="/faq.html">FAQ</a>
  </nav>
 </header>
 
@@ -80,7 +87,7 @@ nav{gap:6px}
 
 <section class="section" id="tools">
  <h2 id="toolsTitle">Explore AI Tools</h2>
- <p class="muted" id="toolsDescription">Everything you need in one place.</p>
+ <p class="muted" id="toolsDescription">Choose a tool, explain what you need, and review the draft before using it.</p>
  <div class="grid" id="toolGrid"></div>
 
  <div id="workspace">
@@ -96,7 +103,7 @@ nav{gap:6px}
 <footer>
  <div class="logo">✦ ApnaAI</div>
  <p>AI for everyone, everywhere.</p>
- <p>English • اردو • Roman Urdu</p>
+ <p>English • اردو • Roman Urdu</p>\n <p class="muted">AI-generated answers may be inaccurate. Review important information before relying on it. Availability depends on the AI provider and its usage limits.</p>\n <p class="footer-links"><a href="/guides.html">Guides</a> · <a href="/about.html">About</a> · <a href="/faq.html">FAQ</a> · <a href="/contact.html">Contact</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/terms.html">Terms of Use</a></p>
  <p class="footer-links"><a href="/about.html">About</a> · <a href="/faq.html">FAQ</a> · <a href="/contact.html">Contact</a> · <a href="/privacy.html">Privacy Policy</a> · <a href="/terms.html">Terms of Use</a></p>
  <small>© 2026 ApnaAI. All rights reserved.</small>
 </footer>
