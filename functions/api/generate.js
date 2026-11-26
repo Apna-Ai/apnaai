@@ -6,6 +6,22 @@ export async function onRequestPost({ request, env }) {
   };
 
   try {
+    // Require a valid registered account session before any Gemini request.
+    const cookieHeader = request.headers.get("Cookie") || "";
+    const sessionCookie = cookieHeader.split(";").map(part => part.trim()).find(part => part.startsWith("apnaai_session="));
+    const sessionToken = sessionCookie ? decodeURIComponent(sessionCookie.slice("apnaai_session=".length)) : "";
+    if (!sessionToken || !env.AUTH_DB) {
+      return Response.json({ error: "AI use karne ke liye pehle ApnaAI account banayein ya login karein.", code: "AUTH_REQUIRED" }, { status: 401, headers });
+    }
+    const tokenDigest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(sessionToken));
+    const tokenHash = [...new Uint8Array(tokenDigest)].map(byte => byte.toString(16).padStart(2, "0")).join("");
+    const account = await env.AUTH_DB.prepare(
+      "SELECT users.id FROM sessions JOIN users ON users.id=sessions.user_id WHERE sessions.token_hash=? AND sessions.expires_at>?"
+    ).bind(tokenHash, Date.now()).first();
+    if (!account) {
+      return Response.json({ error: "AI use karne ke liye pehle ApnaAI account banayein ya login karein.", code: "AUTH_REQUIRED" }, { status: 401, headers });
+    }
+
     if (!env.GEMINI_API_KEY) {
       return Response.json(
         { error: "AI service is not configured." },
